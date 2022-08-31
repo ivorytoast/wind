@@ -1,27 +1,19 @@
-name: CI
+name: Command via SSH
 
-on:
-  push:
-    branches: [ main ]
-
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Image version'
-        required: true
+on: push
 
 jobs:
-  connect:
+  build:
     runs-on: ubuntu-latest
-    needs: build_and_push
 
     steps:
-      - name: ls -a via ssh
+      - name: ls -a via OPEN SSH Private Key
         uses: garygrossgarten/github-action-ssh@release
         with:
+          command: ls -a
           host: ${{ secrets.HOST }}
           username: root
-          passphrase: ${{ secrets.PASSPHRASE }}
-          privateKey: ${{ secrets.PRIVATE_KEY }}
-          envs: IMAGE_NAME,REGISTRY,{{ secrets.DIGITALOCEAN_ACCESS_TOKEN }},GITHUB_SHA
-          command: ls
+          password: ${{ secrets.PASSPHRASE }}
+          privateKey: ${{ secrets.PRIVATE_KEY}}
+        env:
+          CI: true
