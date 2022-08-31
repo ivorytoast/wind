@@ -22,5 +22,7 @@ jobs:
           CI: true
       - run: |
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker stop ivorytoast3853/wind-app
+          docker rm ivorytoast3853/wind-app
           docker run -p 10000:10000 -d --restart always --name wind-app ivorytoast3853/wind-app
         name: Start
