@@ -1,0 +1,3 @@
+doctl registry login
+docker tag wind-app:0.1 registry.digitalocean.com/wind-registry/wind-app:0.1
+docker push registry.digitalocean.com/wind-registry/wind-app:0.1

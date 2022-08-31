@@ -46,6 +46,7 @@ func handleRequests() {
 }
 
 func main() {
+	println("Started Server...")
 	server = make(map[int]int, 0)
 	handleRequests()
 }
