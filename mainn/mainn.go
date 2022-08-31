@@ -1,4 +1,4 @@
-package main
+package mainn
 
 //
 //import (
@@ -101,7 +101,7 @@ package main
 //	{source}|{location}|{entity}|{action}|{detail}
 //	10|10|20|20|20
 //*/
-//func main() {
+//func mainn() {
 //
 //	// -- Connecting to the game engine -- //
 //	flag.Parse()

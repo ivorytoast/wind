@@ -5,7 +5,7 @@ package proxy
 //	"log"
 //)
 //
-//func main() {
+//func mainn() {
 //	println("Started Proxy...")
 //
 //	frontend, _ := zmq.NewSocket(zmq.XSUB)

@@ -7,7 +7,7 @@ package server
 //	"wind/queue"
 //)
 //
-//func main() {
+//func mainn() {
 //	publisher := queue.CreatePublisher("tcp://*:5556")
 //	defer publisher.Close()
 //	go func() {

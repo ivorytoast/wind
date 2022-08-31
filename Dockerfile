@@ -1,5 +1,15 @@
 FROM golang:alpine
-WORKDIR /build
-COPY main.go .
-RUN go build -o main main.go
+
+LABEL maintainer="Anthony Hamill"
+
+WORKDIR /opt/hamilla
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY ./ .
+RUN go build main.go
+
+EXPOSE 10000
+
 CMD ["./main"]

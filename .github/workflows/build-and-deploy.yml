@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy and Start Server
+      - name: Deploy
         uses: garygrossgarten/github-action-ssh@release
         with:
           host: ${{ secrets.HOST }}
@@ -22,4 +22,5 @@ jobs:
           CI: true
       - run: |
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-          docker run -p 10000:10000 -d --restart always --name wind-app wind-app:latest
+          docker run -p 10000:10000 -d --restart always --name wind-app ivorytoast3853/wind-app
+        name: Start

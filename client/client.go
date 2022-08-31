@@ -119,7 +119,7 @@ package client
 //	//return g.State.Timer%g.State.MoveTime == 0
 //}
 //
-//func main() {
+//func mainn() {
 //	publisher := queue.CreatePublisher("tcp://*:5556")
 //	defer publisher.Close()
 //	go func() {

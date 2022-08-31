@@ -73,7 +73,7 @@ package main
 //	}
 //}
 //
-//func main() {
+//func mainn() {
 //
 //	lobbies = make(map[int]Lobby)
 //
