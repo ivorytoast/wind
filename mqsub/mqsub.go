@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pubAddr, err := net.ResolveTCPAddr("tcp", "localhost:8080")
+	pubAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:8080")
 	if err != nil {
 		panic(err)
 	}
