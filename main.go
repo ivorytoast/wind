@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"time"
+	"wind/windmq"
 )
 
 /*
@@ -46,7 +49,23 @@ func handleRequests() {
 }
 
 func main() {
-	println("Started Server...")
+	go func() {
+		println("Starting Publisher...")
+		pubListenAddr, err := net.ResolveTCPAddr("tcp", ":8080")
+		if err != nil {
+			panic(err)
+		}
+		pub := windmq.NewPublisher(pubListenAddr)
+		pub.Start()
+		defer pub.Close()
+
+		for {
+			pub.Send([]byte("Hello World!"))
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	println("Starting REST API...")
 	server = make(map[int]int, 0)
 	handleRequests()
 }
