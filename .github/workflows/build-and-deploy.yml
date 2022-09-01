@@ -20,3 +20,13 @@ jobs:
         with:
           push: true
           tags: ivorytoast3853/wind-app:latest
+      -
+        name: Deploy
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          host: ${{ secrets.HOST }}
+          username: root
+          password: ${{ secrets.PASSWORD }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          privateKey: ${{ secrets.PRIVATE_KEY }}
+          command: ls -la
