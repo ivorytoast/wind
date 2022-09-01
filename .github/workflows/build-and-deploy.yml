@@ -34,4 +34,6 @@ jobs:
           privateKey: ${{ secrets.PRIVATE_KEY }}
           command: |
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-            docker stop $(echo $IMAGE_NAME)
+            docker stop wind-backend
+            docker rm wind-backend
+            docker run -p 10000:10000 --name wind-backend -d ivorytoast3853/wind-app
