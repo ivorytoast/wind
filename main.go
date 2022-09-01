@@ -51,7 +51,7 @@ func handleRequests() {
 func main() {
 	go func() {
 		println("Starting Publisher...")
-		pubListenAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:8080")
+		pubListenAddr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:8080")
 		if err != nil {
 			panic(err)
 		}
