@@ -37,4 +37,4 @@ jobs:
             docker stop wind-backend
             docker rm wind-backend
             docker pull ivorytoast3853/wind-app
-            docker run -p 10000:10000 --name wind-backend -d ivorytoast3853/wind-app
+            docker run -p 10000:10000 -p 8080:8080 --name wind-backend -d ivorytoast3853/wind-app
