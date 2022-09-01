@@ -1,48 +1,30 @@
-name: CI
+name: ci
 
 on:
   push:
-    branches: [ main ]
-
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Image version'
-        required: true
+    branches: main
 
 env:
-  REGISTRY: "registry.digitalocean.com/wind-registry"
   IMAGE_NAME: "wind-app"
 
 jobs:
-  build_and_push:
+  login:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-
-      - name: Build container image
-        run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Log in to DigitalOcean Container Registry with short-lived credentials
-        run: doctl registry login --expiry-seconds 600
-
-      - name: Remove all old images
-        run: if [ ! -z "$(doctl registry repository list | grep "$(echo $IMAGE_NAME)")" ]; then doctl registry repository delete-manifest $(echo $IMAGE_NAME) $(doctl registry repository list-tags $(echo $IMAGE_NAME) | grep -o "sha.*") --force; else echo "No repository"; fi
-
-      - name: Push image to DigitalOcean Container Registry
-        run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
-
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ivorytoast3853/wind-app:latest
+      -
+        name: Deploy
         uses: garygrossgarten/github-action-ssh@release
         with:
           host: ${{ secrets.HOST }}
@@ -50,6 +32,8 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           passphrase: ${{ secrets.PASSPHRASE }}
           privateKey: ${{ secrets.PRIVATE_KEY }}
-          command: ls -la
-        env:
-          CI: true
+          command: |
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+            docker stop wind-backend
+            docker rm wind-backend
+            docker run -p 10000:10000 --name wind-backend -d ivorytoast3853/wind-app
