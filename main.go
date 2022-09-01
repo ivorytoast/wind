@@ -61,7 +61,7 @@ func main() {
 
 		for {
 			pub.Send([]byte("Hello World!"))
-			time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Minute)
 		}
 	}()
 
