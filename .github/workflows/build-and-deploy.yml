@@ -3,6 +3,9 @@ name: ci
 on:
   push:
     branches: main
+    
+env:
+  IMAGE_NAME: "wind-app"
 
 jobs:
   login:
@@ -31,3 +34,4 @@ jobs:
           privateKey: ${{ secrets.PRIVATE_KEY }}
           command: |
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+            docker stop $(echo $IMAGE_NAME)
