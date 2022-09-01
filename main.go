@@ -12,7 +12,7 @@ Create a graph showing the connections between Wind, Servers, and Clients
 var server map[int]int
 
 func baseHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("UP"))
+	w.Write([]byte("UP! Github Actions Worked!"))
 }
 
 func createHandler(w http.ResponseWriter, r *http.Request) {
