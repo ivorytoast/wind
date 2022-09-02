@@ -30,13 +30,13 @@ func main() {
 
 		for {
 			pub.Send([]byte("Hello World!"))
-			time.Sleep(1 * time.Minute)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
 	go func() {
 		println("Starting Subscriber...")
-		pubAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:8080")
+		pubAddr, err := net.ResolveTCPAddr("tcp", "10.0.0.14:8080")
 		if err != nil {
 			panic(err)
 		}
