@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pubListenAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:8080")
+	pubListenAddr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:8080")
 	if err != nil {
 		panic(err)
 	}
@@ -16,7 +16,7 @@ func main() {
 	defer pub.Close()
 
 	for {
-		pub.Send([]byte("Hello World!"))
+		pub.Send([]byte("Hello World From Local!"))
 		time.Sleep(1 * time.Second)
 	}
 }

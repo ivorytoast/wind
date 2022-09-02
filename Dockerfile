@@ -11,5 +11,6 @@ COPY ./ .
 RUN go build main.go
 
 EXPOSE 10000
+EXPOSE 8080
 
 CMD ["./main"]
