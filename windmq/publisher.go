@@ -73,3 +73,7 @@ func (this *Publisher) Send(message []byte) {
 		this.subscriberMutex.Unlock()
 	}
 }
+
+func (publisher *Publisher) CreateMessage(entity string, action string, detail string) []byte {
+	return []byte(entity + "," + action + "," + detail)
+}
