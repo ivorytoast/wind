@@ -7,19 +7,19 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/pebbe/zmq4"
 	"image/color"
 	"log"
 	"math/rand"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
 	"time"
 	"wind/model"
-	"wind/queue"
+	"wind/windmq"
 )
 
-var subscriber *zmq4.Socket
+var subscriber *windmq.Subscriber
 
 type Game struct {
 	State    model.State
@@ -30,8 +30,9 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-//var remoteAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
-var localAddr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "45.77.153.58:8080", "http service address")
+
+//var addr = flag.String("addr", "localhost:8080", "http service address")
 
 func main() {
 	flag.Parse()
@@ -40,7 +41,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *localAddr, Path: "/echo"}
+	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -49,15 +50,18 @@ func main() {
 	}
 	defer c.Close()
 
-	subscriber = queue.CreateSubscriber("tcp://localhost:5556")
+	subAddr, err := net.ResolveTCPAddr("tcp", "localhost:5556")
+	if err != nil {
+		panic(err)
+	}
+	subscriber = windmq.NewSubscriber(subAddr, 1024)
+	subscriber.Start()
+	defer subscriber.Close()
 
 	go func() {
 		for {
-			_ = subscriber.SetSubscribe("")
-			for {
-				msg, _ := subscriber.Recv(0)
-				println("[Received Message]: " + msg)
-			}
+			message := subscriber.EnsureReceived()
+			fmt.Println("Received message: [" + string(message) + "]")
 		}
 	}()
 

@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/pebbe/zmq4"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"wind/api"
 	"wind/model"
-	"wind/queue"
+	"wind/windmq"
 )
 
 /*
@@ -29,7 +29,7 @@ type ServerGame struct {
 }
 
 var serverGame *ServerGame
-var publisher *zmq4.Socket
+var publisher *windmq.Publisher
 
 const (
 	screenWidth        = 640
@@ -66,7 +66,13 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	publisher = queue.CreatePublisher("tcp://*:5556")
+	pubListenAddr, err := net.ResolveTCPAddr("tcp", ":5556")
+	if err != nil {
+		panic(err)
+	}
+	publisher = windmq.NewPublisher(pubListenAddr)
+	publisher.Start()
+	defer publisher.Close()
 
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		conn, _ := upgrader.Upgrade(w, r, nil)
@@ -101,25 +107,25 @@ func handleMessage(msg string) {
 				pos := serverGame.State.Player
 				pos.X--
 				serverGame.State.Player = pos
-				publisher.Send("Player went left to: "+strconv.Itoa(pos.X), 0)
+				publisher.Send([]byte("Player went left to: " + strconv.Itoa(pos.X)))
 				println("Player went left")
 			case "right":
 				pos := serverGame.State.Player
 				pos.X++
 				serverGame.State.Player = pos
-				publisher.Send("Player went right to: "+strconv.Itoa(pos.X), 0)
+				publisher.Send([]byte("Player went right to: " + strconv.Itoa(pos.X)))
 				println("Player went right")
 			case "down":
 				pos := serverGame.State.Player
 				pos.Y++
 				serverGame.State.Player = pos
-				publisher.Send("Player went down to: "+strconv.Itoa(pos.Y), 0)
+				publisher.Send([]byte("Player went down to: " + strconv.Itoa(pos.Y)))
 				println("Player went down")
 			case "up":
 				pos := serverGame.State.Player
 				pos.Y--
 				serverGame.State.Player = pos
-				publisher.Send("Player went up to: "+strconv.Itoa(pos.Y), 0)
+				publisher.Send([]byte("Player went up to: " + strconv.Itoa(pos.Y)))
 				println("Player went up")
 			}
 		}
