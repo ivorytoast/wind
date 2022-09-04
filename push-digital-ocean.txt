@@ -16,6 +16,6 @@ docker run -p 10000:10000 --name wind-backend -d ivorytoast3853/wind-app
 
 docker run -p 8080:8080 --name wind-backend -d ivorytoast3853/wind-app
 
-docker run -p 8080:8080 -p 10000:10000 --name wind-backend -d ivorytoast3853/wind-app
+docker run -p 8080:8080 -p 10000:10000 -p 5556:5556 --name wind-backend -d ivorytoast3853/wind-app
 
-docker run -p 8080:8080 -p 9999:9999 --name wind-proxy -d ivorytoast3853/wind-proxy
+docker run -p 8080:8080 -p 9999:9999 -p 5556:5556 --name wind-proxy -d ivorytoast3853/wind-proxy

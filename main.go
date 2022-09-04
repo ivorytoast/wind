@@ -92,8 +92,6 @@ func main() {
 	handleRequests()
 }
 
-// {entity},{action},{detail} (Phase 1)
-// 10|10|20|20|20 (Phase 2)
 func handleMessage(msg string) {
 	messageParts := strings.Split(msg, ",")
 

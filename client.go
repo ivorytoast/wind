@@ -19,8 +19,6 @@ import (
 	"wind/windmq"
 )
 
-var subscriber *windmq.Subscriber
-
 type Game struct {
 	State    model.State
 	Messages chan string
@@ -34,7 +32,7 @@ var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
 var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
 //var apiAddr = flag.String("addr", "localhost:8080", "http service address")
-//var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
+//var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
 
 func main() {
 	flag.Parse()
@@ -51,21 +49,6 @@ func main() {
 		log.Fatal("dial:", err)
 	}
 	defer c.Close()
-
-	subAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:5556")
-	if err != nil {
-		panic(err)
-	}
-	subscriber = windmq.NewSubscriber(subAddr, 1024)
-	subscriber.Start()
-	defer subscriber.Close()
-
-	go func() {
-		for {
-			message, _ := subscriber.Receive()
-			fmt.Println("Received message: [" + string(message) + "]")
-		}
-	}()
 
 	done := make(chan struct{})
 
@@ -108,6 +91,21 @@ func main() {
 				}
 				return
 			}
+		}
+	}()
+
+	subAddr, err := net.ResolveTCPAddr("tcp", *socketAddr)
+	if err != nil {
+		panic(err)
+	}
+	subscriber := windmq.NewSubscriber(subAddr, 1024)
+	subscriber.Start()
+	defer subscriber.Close()
+
+	go func() {
+		for {
+			message := subscriber.EnsureReceived()
+			fmt.Println("Received message: [" + string(message) + "]")
 		}
 	}()
 
