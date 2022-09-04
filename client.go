@@ -30,9 +30,11 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var addr = flag.String("addr", "45.77.153.58:8080", "http service address")
+var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
+var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
-//var addr = flag.String("addr", "localhost:8080", "http service address")
+//var apiAddr = flag.String("addr", "localhost:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
 func main() {
 	flag.Parse()
@@ -41,7 +43,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
+	u := url.URL{Scheme: "ws", Host: *apiAddr, Path: "/echo"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -50,7 +52,7 @@ func main() {
 	}
 	defer c.Close()
 
-	subAddr, err := net.ResolveTCPAddr("tcp", "localhost:5556")
+	subAddr, err := net.ResolveTCPAddr("tcp", "45.77.153.58:5556")
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +62,7 @@ func main() {
 
 	go func() {
 		for {
-			message := subscriber.EnsureReceived()
+			message, _ := subscriber.Receive()
 			fmt.Println("Received message: [" + string(message) + "]")
 		}
 	}()

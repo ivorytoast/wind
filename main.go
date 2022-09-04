@@ -72,6 +72,7 @@ func main() {
 	}
 	publisher = windmq.NewPublisher(pubListenAddr)
 	publisher.Start()
+	println("Started Publisher")
 	defer publisher.Close()
 
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
