@@ -38,3 +38,18 @@ jobs:
             docker rm wind-backend
             docker pull ivorytoast3853/wind-app
             docker run -p 10000:10000 -p 8080:8080 -p 5556:5556 --name wind-backend -d ivorytoast3853/wind-app
+      -
+        name: Deploy To Austrilia
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          host: ${{ secrets.AUS_HOST }}
+          username: root
+          password: ${{ secrets.AUS_PASSWORD }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          privateKey: ${{ secrets.PRIVATE_KEY }}
+          command: |
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+            docker stop wind-backend
+            docker rm wind-backend
+            docker pull ivorytoast3853/wind-app
+            docker run -p 10000:10000 -p 8080:8080 -p 5556:5556 --name wind-backend -d ivorytoast3853/wind-app
