@@ -243,7 +243,6 @@ package main
 //
 //	playerStartMessage := strconv.Itoa(player) + "," + "started," + strconv.Itoa(x) + "|" + strconv.Itoa(y)
 //	messages = append(messages, playerStartMessage)
-//
 //	return messages
 //}
 //

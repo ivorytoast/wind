@@ -9,6 +9,7 @@ import (
 	"strings"
 	"wind/api"
 	"wind/model"
+	"wind/queue"
 	"wind/windmq"
 )
 
@@ -106,26 +107,41 @@ func handleMessage(msg string) {
 				pos := serverGame.State.Player
 				pos.X--
 				serverGame.State.Player = pos
-				publisher.Send([]byte("Player went left to: " + strconv.Itoa(pos.X)))
-				println("Player went left")
+				x := strconv.Itoa(pos.X)
+				y := strconv.Itoa(pos.Y)
+				message := queue.CreateMessage("player", "move", x+"|"+y)
+				publisher.Send(message)
 			case "right":
 				pos := serverGame.State.Player
 				pos.X++
 				serverGame.State.Player = pos
-				publisher.Send([]byte("Player went right to: " + strconv.Itoa(pos.X)))
-				println("Player went right")
+				x := strconv.Itoa(pos.X)
+				y := strconv.Itoa(pos.Y)
+				message := queue.CreateMessage("player", "move", x+"|"+y)
+				publisher.Send(message)
 			case "down":
 				pos := serverGame.State.Player
 				pos.Y++
 				serverGame.State.Player = pos
-				publisher.Send([]byte("Player went down to: " + strconv.Itoa(pos.Y)))
-				println("Player went down")
+				x := strconv.Itoa(pos.X)
+				y := strconv.Itoa(pos.Y)
+				message := queue.CreateMessage("player", "move", x+"|"+y)
+				publisher.Send(message)
 			case "up":
 				pos := serverGame.State.Player
 				pos.Y--
 				serverGame.State.Player = pos
-				publisher.Send([]byte("Player went up to: " + strconv.Itoa(pos.Y)))
-				println("Player went up")
+				x := strconv.Itoa(pos.X)
+				y := strconv.Itoa(pos.Y)
+				message := queue.CreateMessage("player", "move", x+"|"+y)
+				publisher.Send(message)
+			case "none":
+				pos := serverGame.State.Player
+				serverGame.State.Player = pos
+				x := strconv.Itoa(pos.X)
+				y := strconv.Itoa(pos.Y)
+				message := queue.CreateMessage("player", "move", x+"|"+y)
+				publisher.Send(message)
 			}
 		}
 	}

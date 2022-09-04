@@ -35,7 +35,6 @@ func CreatePublisher(endpoint string) *zmq.Socket {
 	return publisher
 }
 
-func CreateMessage(entity string, action string, detail string) string {
-	// {entity},{action},{detail}
-	return entity + "," + action + "," + detail
+func CreateMessage(entity string, action string, detail string) []byte {
+	return []byte(entity + "," + action + "," + detail)
 }

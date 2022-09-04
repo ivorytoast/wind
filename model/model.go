@@ -26,6 +26,8 @@ type Position struct {
 }
 
 type State struct {
-	Lag    float64
-	Player Position
+	Timer    int
+	MoveTime int
+	Lag      float64
+	Player   Position
 }
