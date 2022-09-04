@@ -165,7 +165,7 @@ package main
 //		return
 //	}
 //}
-//
+
 //func (g *Game) reset() {
 //	g.apple.X = 3 * gridSize
 //	g.apple.Y = 3 * gridSize

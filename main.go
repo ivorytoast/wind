@@ -1,15 +1,59 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/pebbe/zmq4"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"wind/api"
-
-	"github.com/gorilla/websocket"
+	"wind/model"
+	"wind/queue"
 )
 
+/*
+Direct web socket connection from client to server
+
+Client starts up -- asks for the server's IP address.
+Will receive the server's IP address
+
+Server then can interact with whatever it wants with the background
+
+The HTTP calls should be on status and data -- not actual game logic
+For example, might be to get the server's IP address
+*/
+
+type ServerGame struct {
+	State model.State
+}
+
+var serverGame *ServerGame
+var publisher *zmq4.Socket
+
+const (
+	screenWidth        = 640
+	screenHeight       = 480
+	gridSize           = 10
+	xGridCountInScreen = screenWidth / gridSize
+	yGridCountInScreen = screenHeight / gridSize
+)
+
+func newGame() {
+	serverGame = &ServerGame{
+		State: model.State{
+			Lag: 0.0,
+			Player: model.Position{
+				X:             17,
+				Y:             30,
+				MoveDirection: model.DirNone,
+			},
+		},
+	}
+}
+
 func handleRequests() {
+	println("Starting REST API...")
 	http.HandleFunc("/", api.BaseHandler)
 	http.HandleFunc("/create", api.CreateHandler)
 	http.HandleFunc("/join", api.JoinHandler)
@@ -22,64 +66,62 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
+	publisher = queue.CreatePublisher("tcp://*:5556")
+
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-		conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
+		conn, _ := upgrader.Upgrade(w, r, nil)
 
 		for {
-			// Read message from browser
-			msgType, msg, err := conn.ReadMessage()
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
 
-			// Print the message to the console
-			fmt.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
-
-			// Write message back to browser
-			if err = conn.WriteMessage(msgType, msg); err != nil {
-				return
-			}
+			handleMessage(string(msg))
 		}
 	})
 
-	println("Starting REST API...")
+	newGame()
 	handleRequests()
 }
 
-//func main() {
-//	//go func() {
-//	//	println("Starting Publisher...")
-//	//	pubListenAddr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:8080")
-//	//	if err != nil {
-//	//		panic(err)
-//	//	}
-//	//	pub := windmq.NewPublisher(pubListenAddr)
-//	//	pub.Start()
-//	//	defer pub.Close()
-//	//
-//	//	for {
-//	//		pub.Send([]byte("Hello World!"))
-//	//		time.Sleep(5 * time.Second)
-//	//	}
-//	//}()
-//	//
-//	//go func() {
-//	//	println("Starting Subscriber...")
-//	//	pubAddr, err := net.ResolveTCPAddr("tcp", "10.0.0.14:8080")
-//	//	if err != nil {
-//	//		panic(err)
-//	//	}
-//	//	sub := windmq.NewSubscriber(pubAddr, 1024)
-//	//	sub.Start()
-//	//	defer sub.Close()
-//	//
-//	//	for {
-//	//		message := sub.EnsureReceived()
-//	//		fmt.Println(string(message))
-//	//	}
-//	//}()
-//
-//
-//	println("Starting REST API...")
-//	handleRequests()
-//}
+// {entity},{action},{detail} (Phase 1)
+// 10|10|20|20|20 (Phase 2)
+func handleMessage(msg string) {
+	messageParts := strings.Split(msg, ",")
+
+	entity := messageParts[0]
+	action := messageParts[1]
+	detail := messageParts[2]
+
+	if entity == "player" {
+		if action == "move" {
+			switch detail {
+			case "left":
+				pos := serverGame.State.Player
+				pos.X--
+				serverGame.State.Player = pos
+				publisher.Send("Player went left to: "+strconv.Itoa(pos.X), 0)
+				println("Player went left")
+			case "right":
+				pos := serverGame.State.Player
+				pos.X++
+				serverGame.State.Player = pos
+				publisher.Send("Player went right to: "+strconv.Itoa(pos.X), 0)
+				println("Player went right")
+			case "down":
+				pos := serverGame.State.Player
+				pos.Y++
+				serverGame.State.Player = pos
+				publisher.Send("Player went down to: "+strconv.Itoa(pos.Y), 0)
+				println("Player went down")
+			case "up":
+				pos := serverGame.State.Player
+				pos.Y--
+				serverGame.State.Player = pos
+				publisher.Send("Player went up to: "+strconv.Itoa(pos.Y), 0)
+				println("Player went up")
+			}
+		}
+	}
+}

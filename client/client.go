@@ -1,34 +1,12 @@
-package client
+package main
 
-//import (
-//	"fmt"
-//	"github.com/hajimehoshi/ebiten/v2"
-//	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-//	"github.com/hajimehoshi/ebiten/v2/inpututil"
-//	zmq "github.com/pebbe/zmq4"
-//	"image/color"
-//	"log"
-//	"math/rand"
-//	"time"
-//	"wind/model"
-//	"wind/queue"
-//)
-//
-//const (
-//	dirNone = iota
-//	dirLeft
-//	dirRight
-//	dirDown
-//	dirUp
-//)
-//
-///*
-//Game has two responsibilities:
-//	1. Drawing to the screen
-//	2. Sending updates to Wind
-//
-//It shares the same state as servers, and only knows the most basic state of all
-//*/
+/*
+Game has two responsibilities:
+	1. Drawing to the screen
+	2. Sending updates to Wind
+
+It shares the same state as servers, and only knows the most basic state of all
+*/
 //var windQueue *zmq.Socket
 //
 //type Game struct {
@@ -119,7 +97,7 @@ package client
 //	//return g.State.Timer%g.State.MoveTime == 0
 //}
 //
-//func mainn() {
+//func main() {
 //	publisher := queue.CreatePublisher("tcp://*:5556")
 //	defer publisher.Close()
 //	go func() {

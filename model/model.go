@@ -11,20 +11,21 @@ const (
 	Client SourceType = "client"
 )
 
+const (
+	DirNone = iota
+	DirLeft
+	DirRight
+	DirDown
+	DirUp
+)
+
 type Position struct {
-	X int
-	Y int
+	X             int
+	Y             int
+	MoveDirection int
 }
 
 type State struct {
-	ID            int
-	ServerID      int
-	Players       map[int]Position
-	MoveDirection int
-	Apple         Position
-	Timer         int
-	MoveTime      int
-	Score         int
-	BestScore     int
-	Level         int
+	Lag    float64
+	Player Position
 }

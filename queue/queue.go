@@ -36,6 +36,6 @@ func CreatePublisher(endpoint string) *zmq.Socket {
 }
 
 func CreateMessage(entity string, action string, detail string) string {
-	// {sourceType},{sourceID},{location},{entity},{action},{detail} (Phase 1)
+	// {entity},{action},{detail}
 	return entity + "," + action + "," + detail
 }
