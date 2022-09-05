@@ -21,6 +21,8 @@ import (
 	"wind/windmq"
 )
 
+var requests map[string]string
+var counter int
 var clientGame *Game
 
 type Game struct {
@@ -32,11 +34,14 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
-var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
+//var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
-//var apiAddr = flag.String("addr", "localhost:8080", "http service address")
-//var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
+//var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
+
+var apiAddr = flag.String("addr", "localhost:8080", "http service address")
+var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
 
 func main() {
 	flag.Parse()
@@ -56,15 +61,17 @@ func main() {
 
 	done := make(chan struct{})
 
+	requests = make(map[string]string, 0)
 	clientGame = &Game{
 		State: model.State{
 			Timer:    0,
-			MoveTime: 4,
+			MoveTime: 2,
 			Lag:      0.0,
-			Player: model.Position{
+			Player: model.Entity{
 				X:             17,
 				Y:             30,
 				MoveDirection: model.DirNone,
+				Type:          model.Player,
 			},
 		},
 		Messages: make(chan string, 5000),
@@ -78,12 +85,13 @@ func main() {
 			case <-done:
 				return
 			case t := <-clientGame.Messages:
+
 				err := c.WriteMessage(websocket.TextMessage, []byte(t))
 				if err != nil {
 					log.Println("write:", err)
 					return
 				}
-				log.Println("Wrote message: " + t)
+				log.Println(t)
 			case <-interrupt:
 				log.Println("interrupt")
 				err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
@@ -118,12 +126,47 @@ func main() {
 	startGame(clientGame)
 }
 
+func handleMessageAdjustment(msg string) {
+	messageParts := strings.Split(msg, ",")
+
+	entity := messageParts[1]
+	action := messageParts[2]
+	detail := messageParts[3]
+
+	if entity == "player" {
+		if action == "move" {
+			switch detail {
+			case "none":
+			case "left":
+				pos := clientGame.State.Player
+				pos.X--
+				clientGame.State.Player = pos
+			case "right":
+				pos := clientGame.State.Player
+				pos.X--
+				clientGame.State.Player = pos
+			case "down":
+				pos := clientGame.State.Player
+				pos.Y++
+				clientGame.State.Player = pos
+			case "up":
+				pos := clientGame.State.Player
+				pos.Y--
+				clientGame.State.Player = pos
+			}
+		}
+	}
+}
+
 func handleMessageToClient(msg string) {
 	messageParts := strings.Split(msg, ",")
 
-	entity := messageParts[0]
-	action := messageParts[1]
-	detail := messageParts[2]
+	count := messageParts[0]
+	entity := messageParts[1]
+	action := messageParts[2]
+	detail := messageParts[3]
+
+	ct, _ := strconv.Atoi(count)
 
 	if entity == "player" {
 		if action == "move" {
@@ -135,7 +178,14 @@ func handleMessageToClient(msg string) {
 			clientGame.State.Player.X = x
 			clientGame.State.Player.Y = y
 
-			println("Received message from server: " + msg)
+			if counter != ct {
+				for i := ct; i < counter; i++ {
+					messageAdjustment := requests[strconv.Itoa(i)]
+
+					handleMessageAdjustment(messageAdjustment)
+				}
+				println(strconv.Itoa(counter) + "  != " + strconv.Itoa(ct))
+			}
 		}
 	}
 }
@@ -162,30 +212,20 @@ func (g *Game) Update() error {
 	}
 
 	if g.needsToMoveSnake() {
+		ct := strconv.Itoa(counter)
 		switch g.State.Player.MoveDirection {
 		case model.DirNone:
-			g.Messages <- "player,move,none"
+			g.createAndSendMessage(ct, "none")
 		case model.DirLeft:
-			pos := g.State.Player
-			pos.X--
-			g.State.Player = pos
-			g.Messages <- "player,move,left"
+			g.createAndSendMessage(ct, "left")
 		case model.DirRight:
-			pos := g.State.Player
-			pos.X++
-			g.State.Player = pos
-			g.Messages <- "player,move,right"
+			g.createAndSendMessage(ct, "right")
 		case model.DirDown:
-			pos := g.State.Player
-			pos.Y++
-			g.State.Player = pos
-			g.Messages <- "player,move,down"
+			g.createAndSendMessage(ct, "down")
 		case model.DirUp:
-			pos := g.State.Player
-			pos.Y--
-			g.State.Player = pos
-			g.Messages <- "player,move,up"
+			g.createAndSendMessage(ct, "up")
 		}
+		counter++
 	}
 
 	g.State.Timer++
@@ -214,6 +254,12 @@ func (g *Game) drawPlayer(screen *ebiten.Image) {
 		float64(g.State.Player.Y*model.GridSize),
 		model.GridSize,
 		model.GridSize,
-		color.RGBA{0xFF, 0xFF, 0x00, 0xff},
+		color.RGBA{R: 0xFF, G: 0xFF, A: 0xff},
 	)
+}
+
+func (g *Game) createAndSendMessage(count string, direction string) {
+	outboundMessage := count + ",player,move," + direction
+	requests[count] = outboundMessage
+	g.Messages <- outboundMessage
 }

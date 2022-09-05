@@ -1,6 +1,7 @@
 package model
 
 type SourceType string
+type EntityType string
 
 const (
 	ScreenWidth  = 640
@@ -9,6 +10,9 @@ const (
 
 	Server SourceType = "server"
 	Client SourceType = "client"
+
+	Player EntityType = "player"
+	Apple  EntityType = "apple"
 )
 
 const (
@@ -19,15 +23,16 @@ const (
 	DirUp
 )
 
-type Position struct {
+type Entity struct {
 	X             int
 	Y             int
 	MoveDirection int
+	Type          EntityType
 }
 
 type State struct {
 	Timer    int
 	MoveTime int
 	Lag      float64
-	Player   Position
+	Player   Entity
 }

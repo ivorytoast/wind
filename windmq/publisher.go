@@ -74,6 +74,6 @@ func (this *Publisher) Send(message []byte) {
 	}
 }
 
-func (publisher *Publisher) CreateMessage(entity string, action string, detail string) []byte {
-	return []byte(entity + "," + action + "," + detail)
+func (publisher *Publisher) CreateMessage(count string, entity string, action string, detail string) []byte {
+	return []byte(count + "," + entity + "," + action + "," + detail)
 }
