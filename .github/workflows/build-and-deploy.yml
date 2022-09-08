@@ -39,7 +39,7 @@ jobs:
             docker pull ivorytoast3853/wind-app
             docker run -p 10000:10000 -p 8080:8080 -p 5556:5556 --name wind-backend -d ivorytoast3853/wind-app
       -
-        name: Deploy To Austrilia
+        name: Deploy To Australia
         uses: garygrossgarten/github-action-ssh@release
         with:
           host: ${{ secrets.AUS_HOST }}

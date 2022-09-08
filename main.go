@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"wind/api"
 	"wind/model"
 	"wind/windmq"
@@ -54,7 +55,7 @@ func newGame() {
 }
 
 func handleRequests() {
-	println("Starting REST API V0.1...")
+	println("Starting REST API v0.2...")
 	http.HandleFunc("/", api.BaseHandler)
 	http.HandleFunc("/create", api.CreateHandler)
 	http.HandleFunc("/join", api.JoinHandler)
@@ -89,8 +90,30 @@ func main() {
 		}
 	})
 
+	ticker := time.NewTicker(100 * time.Millisecond)
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case _ = <-ticker.C:
+				sendGameState()
+			}
+		}
+	}()
+
 	newGame()
 	handleRequests()
+}
+
+func sendGameState() {
+	currentTime := strconv.Itoa(int(time.Now().UnixMilli()))
+	x := strconv.Itoa(serverGame.State.Player.X)
+	y := strconv.Itoa(serverGame.State.Player.Y)
+	message := publisher.CreateMessage(currentTime, "player", "move", x+"|"+y)
+	publisher.Send(message)
 }
 
 func handleMessage(msg string) {
@@ -110,39 +133,34 @@ func handleMessage(msg string) {
 				serverGame.State.Player = pos
 				x := strconv.Itoa(pos.X)
 				y := strconv.Itoa(pos.Y)
-				message := publisher.CreateMessage(count, "player", "move", x+"|"+y)
-				publisher.Send(message)
+				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "right":
 				pos := serverGame.State.Player
 				pos.X++
 				serverGame.State.Player = pos
 				x := strconv.Itoa(pos.X)
 				y := strconv.Itoa(pos.Y)
-				message := publisher.CreateMessage(count, "player", "move", x+"|"+y)
-				publisher.Send(message)
+				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "down":
 				pos := serverGame.State.Player
 				pos.Y++
 				serverGame.State.Player = pos
 				x := strconv.Itoa(pos.X)
 				y := strconv.Itoa(pos.Y)
-				message := publisher.CreateMessage(count, "player", "move", x+"|"+y)
-				publisher.Send(message)
+				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "up":
 				pos := serverGame.State.Player
 				pos.Y--
 				serverGame.State.Player = pos
 				x := strconv.Itoa(pos.X)
 				y := strconv.Itoa(pos.Y)
-				message := publisher.CreateMessage(count, "player", "move", x+"|"+y)
-				publisher.Send(message)
+				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "none":
 				pos := serverGame.State.Player
 				serverGame.State.Player = pos
 				x := strconv.Itoa(pos.X)
 				y := strconv.Itoa(pos.Y)
-				message := publisher.CreateMessage(count, "player", "move", x+"|"+y)
-				publisher.Send(message)
+				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			}
 		}
 	}
