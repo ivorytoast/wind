@@ -41,11 +41,11 @@ var turnOnServerReconciliation = true
 //var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
 //var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
-//var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
-//var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
+var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
+var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
 
-var apiAddr = flag.String("addr", "localhost:8080", "http service address")
-var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
+//var apiAddr = flag.String("addr", "localhost:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
 
 func main() {
 	flag.Parse()
@@ -123,7 +123,7 @@ func main() {
 	go func() {
 		for {
 			message := subscriber.EnsureReceived()
-			handleMessageToClient(string(message))
+			handleGameStateUpdate(string(message))
 		}
 	}()
 
@@ -131,7 +131,7 @@ func main() {
 }
 
 func performServerReconciliation(latestServerRequest int) {
-	if latestClientRequest != latestServerRequest {
+	if latestServerRequest < latestClientRequest {
 		xTotalDelta := 0
 		yTotalDelta := 0
 		for i := latestServerRequest; i <= latestClientRequest; i++ {
@@ -174,24 +174,12 @@ func handleMessageAdjustment2(msg string, xDelta int, yDelta int) {
 			switch detail {
 			case "none":
 			case "left":
-				pos := clientGame.State.Player
-				pos.X--
-				clientGame.State.Player = pos
 				xDelta = xDelta - 1
 			case "right":
-				pos := clientGame.State.Player
-				pos.X++
-				clientGame.State.Player = pos
 				xDelta = xDelta + 1
 			case "down":
-				pos := clientGame.State.Player
-				pos.Y++
-				clientGame.State.Player = pos
 				yDelta = yDelta + 1
 			case "up":
-				pos := clientGame.State.Player
-				pos.Y--
-				clientGame.State.Player = pos
 				yDelta = yDelta - 1
 			}
 		}
@@ -234,7 +222,7 @@ func handleMessageAdjustment(msg string) {
 	}
 }
 
-func handleMessageToClient(msg string) {
+func handleGameStateUpdate(msg string) {
 	messageParts := strings.Split(msg, ",")
 
 	if len(messageParts) != 4 {
