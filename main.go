@@ -31,6 +31,7 @@ type ServerGame struct {
 
 var serverGame *ServerGame
 var publisher *windmq.Publisher
+var lastRequest = 0
 
 const (
 	screenWidth        = 640
@@ -109,10 +110,10 @@ func main() {
 }
 
 func sendGameState() {
-	currentTime := strconv.Itoa(int(time.Now().UnixMilli()))
+	lastProcessedClientRequest := strconv.Itoa(lastRequest)
 	x := strconv.Itoa(serverGame.State.Player.X)
 	y := strconv.Itoa(serverGame.State.Player.Y)
-	message := publisher.CreateMessage(currentTime, "player", "move", x+"|"+y)
+	message := publisher.CreateMessage(lastProcessedClientRequest, "player", "move", x+"|"+y)
 	publisher.Send(message)
 }
 
@@ -124,6 +125,9 @@ func handleMessage(msg string) {
 	action := messageParts[2]
 	detail := messageParts[3]
 
+	lastSeenClientRequest, _ := strconv.Atoi(count)
+	lastRequest = lastSeenClientRequest
+
 	if entity == "player" {
 		if action == "move" {
 			switch detail {
@@ -131,36 +135,21 @@ func handleMessage(msg string) {
 				pos := serverGame.State.Player
 				pos.X--
 				serverGame.State.Player = pos
-				x := strconv.Itoa(pos.X)
-				y := strconv.Itoa(pos.Y)
-				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "right":
 				pos := serverGame.State.Player
 				pos.X++
 				serverGame.State.Player = pos
-				x := strconv.Itoa(pos.X)
-				y := strconv.Itoa(pos.Y)
-				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "down":
 				pos := serverGame.State.Player
 				pos.Y++
 				serverGame.State.Player = pos
-				x := strconv.Itoa(pos.X)
-				y := strconv.Itoa(pos.Y)
-				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "up":
 				pos := serverGame.State.Player
 				pos.Y--
 				serverGame.State.Player = pos
-				x := strconv.Itoa(pos.X)
-				y := strconv.Itoa(pos.Y)
-				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			case "none":
 				pos := serverGame.State.Player
 				serverGame.State.Player = pos
-				x := strconv.Itoa(pos.X)
-				y := strconv.Itoa(pos.Y)
-				_ = publisher.CreateMessage(count, "player", "move", x+"|"+y)
 			}
 		}
 	}

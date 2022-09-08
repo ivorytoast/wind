@@ -21,7 +21,7 @@ import (
 )
 
 var requests map[string]string
-var counter = time.Now().UnixMilli()
+var latestClientRequest = 0
 var clientGame *Game
 
 type Game struct {
@@ -130,15 +130,15 @@ func main() {
 	startGame(clientGame)
 }
 
-func performServerReconciliation(timeFromServer int64) {
-	if counter != timeFromServer {
+func performServerReconciliation(latestServerRequest int) {
+	if latestClientRequest != latestServerRequest {
 		xTotalDelta := 0
 		yTotalDelta := 0
-		for i := counter; i < timeFromServer; i++ {
+		for i := latestServerRequest; i <= latestClientRequest; i++ {
 			// TODO: Can cause a concurrent map read and map write...
 			// 		"fatal error: concurrent map read and map write"
 			// TODO: Have to set a mutex or use a WriteLock
-			messageAdjustment := requests[strconv.Itoa(int(i))]
+			messageAdjustment := requests[strconv.Itoa(i)]
 
 			//handleMessageAdjustment(messageAdjustment)
 			handleMessageAdjustment2(messageAdjustment, xTotalDelta, yTotalDelta)
@@ -146,10 +146,10 @@ func performServerReconciliation(timeFromServer int64) {
 
 		// Apply the total deltas on the square
 		pos := clientGame.State.Player
-		//pos.X = pos.X + xTotalDelta
-		//pos.Y = pos.Y + yTotalDelta
+		pos.X = pos.X + xTotalDelta
+		pos.Y = pos.Y + yTotalDelta
 		clientGame.State.Player = pos
-		println(strconv.Itoa(int(counter)) + "  != " + strconv.Itoa(int(timeFromServer)))
+		println(strconv.Itoa(latestServerRequest) + "  < " + strconv.Itoa(latestClientRequest))
 	}
 }
 
@@ -260,7 +260,7 @@ func handleMessageToClient(msg string) {
 			clientGame.State.Player.Y = y
 
 			if turnOnServerReconciliation {
-				performServerReconciliation(int64(ct))
+				performServerReconciliation(ct)
 			}
 		}
 	}
@@ -288,7 +288,8 @@ func (g *Game) Update() error {
 	}
 
 	if g.needsToMoveSnake() {
-		ct := strconv.Itoa(int(counter))
+		latestClientRequest++
+		ct := strconv.Itoa(latestClientRequest)
 		switch g.State.Player.MoveDirection {
 		case model.DirNone:
 			g.createAndSendMessage(ct, "none")
@@ -312,7 +313,6 @@ func (g *Game) Update() error {
 	}
 
 	g.State.Timer++
-	counter = time.Now().UnixMilli()
 
 	return nil
 }
