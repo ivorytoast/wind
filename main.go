@@ -54,7 +54,7 @@ func newGame() {
 }
 
 func handleRequests() {
-	println("Starting REST API...")
+	println("Starting REST API V0.1...")
 	http.HandleFunc("/", api.BaseHandler)
 	http.HandleFunc("/create", api.CreateHandler)
 	http.HandleFunc("/join", api.JoinHandler)

@@ -34,14 +34,14 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-//var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
-//var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
+var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
+var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
 //var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
 //var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
 
-var apiAddr = flag.String("addr", "localhost:8080", "http service address")
-var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
+//var apiAddr = flag.String("addr", "localhost:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
 
 func main() {
 	flag.Parse()
