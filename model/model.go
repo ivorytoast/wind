@@ -35,4 +35,5 @@ type State struct {
 	MoveTime int
 	Lag      float64
 	Player   Entity
+	Follow   Entity
 }

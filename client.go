@@ -69,11 +69,11 @@ func main() {
 	clientGame = &Game{
 		State: model.State{
 			Timer:    0,
-			MoveTime: 2,
+			MoveTime: 4,
 			Lag:      0.0,
 			Player: model.Entity{
-				X:             17,
-				Y:             30,
+				X:             35,
+				Y:             14,
 				MoveDirection: model.DirNone,
 				Type:          model.Player,
 			},
@@ -130,26 +130,36 @@ func main() {
 	startGame(clientGame)
 }
 
-func performServerReconciliation(latestServerRequest int) {
+func performServerReconciliation(latestServerRequest int, xStartPoint int, yStartPoint int) {
 	if latestServerRequest < latestClientRequest {
-		xTotalDelta := 0
-		yTotalDelta := 0
-		for i := latestServerRequest; i <= latestClientRequest; i++ {
+		var xTotalDelta = 0
+		var yTotalDelta = 0
+		for i := latestServerRequest + 1; i <= latestClientRequest; i++ {
 			// TODO: Can cause a concurrent map read and map write...
 			// 		"fatal error: concurrent map read and map write"
 			// TODO: Have to set a mutex or use a WriteLock
 			messageAdjustment := requests[strconv.Itoa(i)]
 
 			//handleMessageAdjustment(messageAdjustment)
-			handleMessageAdjustment2(messageAdjustment, xTotalDelta, yTotalDelta)
+			xTotalDelta, yTotalDelta = handleMessageAdjustment2(messageAdjustment, xTotalDelta, yTotalDelta)
 		}
+
+		if xTotalDelta == 0 || yTotalDelta == 0 {
+			println("WHY U 0?")
+		}
+
+		// Apply delta to the start points
+		xFinishPoint := xStartPoint + xTotalDelta
+		yFinishPoint := yStartPoint + yTotalDelta
 
 		// Apply the total deltas on the square
 		pos := clientGame.State.Player
-		pos.X = pos.X + xTotalDelta
-		pos.Y = pos.Y + yTotalDelta
+		pos.X = xFinishPoint
+		pos.Y = yFinishPoint
 		clientGame.State.Player = pos
 		println(strconv.Itoa(latestServerRequest) + "  < " + strconv.Itoa(latestClientRequest))
+		println("Went from (" + strconv.Itoa(xStartPoint) + ", " + strconv.Itoa(yStartPoint) + ") " +
+			"to (" + strconv.Itoa(xFinishPoint) + "  < " + strconv.Itoa(yFinishPoint))
 	}
 }
 
@@ -158,13 +168,15 @@ Unlike v1, I am only going to apply adjustments to the square until ALL
 adjustments have been calculated together. This should help prevent the square
 from being visually glitchy when changing directions (especially in 90 degree angles)
 */
-func handleMessageAdjustment2(msg string, xDelta int, yDelta int) {
+func handleMessageAdjustment2(msg string, xDelta int, yDelta int) (int, int) {
 	messageParts := strings.Split(msg, ",")
 
-	if len(messageParts) != 3 {
-		return
+	if len(messageParts) != 4 {
+		println("ERROR!!!")
+		return 0, 0
 	}
 
+	_ = messageParts[0]
 	entity := messageParts[1]
 	action := messageParts[2]
 	detail := messageParts[3]
@@ -184,45 +196,12 @@ func handleMessageAdjustment2(msg string, xDelta int, yDelta int) {
 			}
 		}
 	}
-}
 
-func handleMessageAdjustment(msg string) {
-	messageParts := strings.Split(msg, ",")
-
-	if len(messageParts) != 3 {
-		return
-	}
-
-	entity := messageParts[1]
-	action := messageParts[2]
-	detail := messageParts[3]
-
-	if entity == "player" {
-		if action == "move" {
-			switch detail {
-			case "none":
-			case "left":
-				pos := clientGame.State.Player
-				pos.X--
-				clientGame.State.Player = pos
-			case "right":
-				pos := clientGame.State.Player
-				pos.X++
-				clientGame.State.Player = pos
-			case "down":
-				pos := clientGame.State.Player
-				pos.Y++
-				clientGame.State.Player = pos
-			case "up":
-				pos := clientGame.State.Player
-				pos.Y--
-				clientGame.State.Player = pos
-			}
-		}
-	}
+	return xDelta, yDelta
 }
 
 func handleGameStateUpdate(msg string) {
+	println(msg)
 	messageParts := strings.Split(msg, ",")
 
 	if len(messageParts) != 4 {
@@ -244,11 +223,21 @@ func handleGameStateUpdate(msg string) {
 			x, _ := strconv.Atoi(coordinates[0])
 			y, _ := strconv.Atoi(coordinates[1])
 
-			clientGame.State.Player.X = x
-			clientGame.State.Player.Y = y
+			if latestClientRequest == 50 {
+				clientGame.State.Player.X = x
+				clientGame.State.Player.Y = y
+			}
+			clientGame.State.Follow.X = x
+			clientGame.State.Follow.Y = y
+
+			xStartPoint := x
+			yStartPoint := y
 
 			if turnOnServerReconciliation {
-				performServerReconciliation(ct)
+				performServerReconciliation(ct, xStartPoint, yStartPoint)
+			} else {
+				clientGame.State.Player.X = x
+				clientGame.State.Player.Y = y
 			}
 		}
 	}
@@ -306,7 +295,9 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// g.drawLines(screen)
 	g.drawPlayer(screen)
+	g.drawFollow(screen)
 
 	if turnOnServerReconciliation {
 		ebitenutil.DebugPrint(screen, "Server Reconciliation Turned On")
@@ -323,6 +314,19 @@ func (g *Game) needsToMoveSnake() bool {
 	return g.State.Timer%g.State.MoveTime == 0
 }
 
+func (g *Game) drawLines(screen *ebiten.Image) {
+	for i := 0; i < model.ScreenHeight; i += 2 {
+		ebitenutil.DrawRect(
+			screen,
+			0,
+			float64(i*model.GridSize),
+			model.ScreenWidth,
+			model.GridSize,
+			color.RGBA{0, 0, 0xff, 0xff},
+		)
+	}
+}
+
 func (g *Game) drawPlayer(screen *ebiten.Image) {
 	ebitenutil.DrawRect(
 		screen,
@@ -330,7 +334,18 @@ func (g *Game) drawPlayer(screen *ebiten.Image) {
 		float64(g.State.Player.Y*model.GridSize),
 		model.GridSize,
 		model.GridSize,
-		color.RGBA{R: 0xFF, G: 0xFF, A: 0xff},
+		color.RGBA{0xff, 0, 0, 0xff},
+	)
+}
+
+func (g *Game) drawFollow(screen *ebiten.Image) {
+	ebitenutil.DrawRect(
+		screen,
+		float64(g.State.Follow.X*model.GridSize),
+		float64(g.State.Follow.Y*model.GridSize),
+		model.GridSize,
+		model.GridSize,
+		color.RGBA{0, 0xff, 0, 0xff},
 	)
 }
 
