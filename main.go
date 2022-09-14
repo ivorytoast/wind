@@ -33,14 +33,6 @@ var serverGame *ServerGame
 var publisher *windmq.Publisher
 var lastRequest = 0
 
-const (
-	screenWidth        = 640
-	screenHeight       = 480
-	gridSize           = 10
-	xGridCountInScreen = screenWidth / gridSize
-	yGridCountInScreen = screenHeight / gridSize
-)
-
 func newGame() {
 	serverGame = &ServerGame{
 		State: model.State{

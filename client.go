@@ -73,7 +73,7 @@ func main() {
 			Lag:      0.0,
 			Player: model.Entity{
 				X:             35,
-				Y:             14,
+				Y:             12,
 				MoveDirection: model.DirNone,
 				Type:          model.Player,
 			},
