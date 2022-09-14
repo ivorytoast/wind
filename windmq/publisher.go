@@ -74,6 +74,10 @@ func (this *Publisher) Send(message []byte) {
 	}
 }
 
+func (publisher *Publisher) SendJoinResponse(entity string, detail string) []byte {
+	return []byte(entity + "," + detail)
+}
+
 func (publisher *Publisher) CreateMessage(count string, entity string, action string, detail string) []byte {
 	return []byte(count + "," + entity + "," + action + "," + detail)
 }

@@ -2,6 +2,7 @@ package model
 
 type SourceType string
 type EntityType string
+type MessageType string
 
 const (
 	ScreenWidth  = 640
@@ -13,6 +14,10 @@ const (
 
 	Player EntityType = "player"
 	Apple  EntityType = "apple"
+
+	Join    MessageType = "join"
+	Move    MessageType = "move"
+	Unknown MessageType = "unknown"
 )
 
 const (

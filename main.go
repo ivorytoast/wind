@@ -79,7 +79,14 @@ func main() {
 				return
 			}
 
-			handleMessage(string(msg))
+			message := string(msg)
+
+			msgType := determineMessageType(message)
+			if msgType == model.Join {
+				handleSetting(message)
+			} else if msgType == model.Move {
+				handleEvent(message)
+			}
 		}
 	})
 
@@ -109,7 +116,35 @@ func sendGameState() {
 	publisher.Send(message)
 }
 
-func handleMessage(msg string) {
+func determineMessageType(msg string) model.MessageType {
+	messageParts := strings.Split(msg, ",")
+
+	if len(messageParts) == 2 {
+		return model.Join
+	} else if len(messageParts) == 4 {
+		return model.Move
+	}
+
+	return model.Unknown
+}
+
+func handleSetting(message string) {
+	messageParts := strings.Split(message, ",")
+
+	entity := messageParts[0]
+	action := messageParts[1]
+
+	if entity == "player" {
+		if action == "join" {
+			x := strconv.Itoa(serverGame.State.Player.X)
+			y := strconv.Itoa(serverGame.State.Player.Y)
+			response := publisher.SendJoinResponse("player", x+"|"+y)
+			publisher.Send(response)
+		}
+	}
+}
+
+func handleEvent(msg string) {
 	messageParts := strings.Split(msg, ",")
 
 	count := messageParts[0]

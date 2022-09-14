@@ -41,11 +41,11 @@ var turnOnServerReconciliation = true
 //var apiAddr = flag.String("addr", "45.77.153.58:8080", "http service address")
 //var socketAddr = flag.String("socketAddr", "45.77.153.58:5556", "socket service address")
 
-var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
-var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
+//var apiAddr = flag.String("addr", "67.219.107.162:8080", "http service address")
+//var socketAddr = flag.String("socketAddr", "67.219.107.162:5556", "socket service address")
 
-//var apiAddr = flag.String("addr", "localhost:8080", "http service address")
-//var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
+var apiAddr = flag.String("addr", "localhost:8080", "http service address")
+var socketAddr = flag.String("socketAddr", "localhost:5556", "socket service address")
 
 func main() {
 	flag.Parse()
@@ -72,8 +72,8 @@ func main() {
 			MoveTime: 4,
 			Lag:      0.0,
 			Player: model.Entity{
-				X:             35,
-				Y:             12,
+				X:             38,
+				Y:             15,
 				MoveDirection: model.DirNone,
 				Type:          model.Player,
 			},
@@ -89,7 +89,6 @@ func main() {
 			case <-done:
 				return
 			case t := <-clientGame.Messages:
-
 				err := c.WriteMessage(websocket.TextMessage, []byte(t))
 				if err != nil {
 					log.Println("write:", err)
@@ -128,6 +127,7 @@ func main() {
 	}()
 
 	startGame(clientGame)
+	clientGame.sendJoinMessage()
 }
 
 func performServerReconciliation(latestServerRequest int, xStartPoint int, yStartPoint int) {
@@ -205,6 +205,21 @@ func handleGameStateUpdate(msg string) {
 	messageParts := strings.Split(msg, ",")
 
 	if len(messageParts) != 4 {
+		if len(messageParts) == 2 {
+			settingEntity := messageParts[0]
+			settingDetail := messageParts[1]
+
+			if settingEntity == "player" {
+
+				coordinates := strings.Split(settingDetail, "|")
+
+				settingX, _ := strconv.Atoi(coordinates[0])
+				settingY, _ := strconv.Atoi(coordinates[1])
+
+				clientGame.State.Player.X = settingX
+				clientGame.State.Player.Y = settingY
+			}
+		}
 		println(msg)
 		return
 	}
@@ -353,4 +368,8 @@ func (g *Game) createAndSendMessage(count string, direction string) {
 	outboundMessage := count + ",player,move," + direction
 	requests[count] = outboundMessage
 	g.Messages <- outboundMessage
+}
+
+func (g *Game) sendJoinMessage() {
+	g.Messages <- "player,join"
 }
